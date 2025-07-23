@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Harvest Risk Checker</title>
+
+  <style>
+    .risk-safe {
+      color: white;
+      background-color: #4CAF50;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .risk-moderate {
+      color: black;
+      background-color: #FFD700;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .risk-high {
+      color: white;
+      background-color: #f44336;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+  
+</head>
+<body>
+  <h1>Harvest Risk Dashboard</h1>
+
+  <label for="zipInput">Enter ZIP Code:</label>
+  <input type="text" id="zipInput" placeholder="e.g. 99362" />
+  <button onclick="checkRisk()">Check Risk</button>
+
+  <div id="output" style="margin-top: 20px;"></div>
+
+  <script>
+    function isValidZip(zip) {
+      return /^\d{5}$/.test(zip);
+    }
+  
+    async function checkRisk() {
+      const zip = document.getElementById('zipInput').value;
+      const output = document.getElementById('output');
+  
+      if (!isValidZip(zip)) {
+        output.innerHTML = "Please enter a valid 5-digit ZIP code.";
+        return;
+      }
+  
+      output.innerHTML = "Loading...";
+  
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/harvest-risk?zip=${zip}`);
+        const data = await response.json();
+  
+        if (data.error) {
+          output.innerHTML = `${data.error}`;
+          return;
+        }
+  
+        let riskClass = '';
+        if (data.risk_level === 'safe') {
+          riskClass = 'risk-safe';
+        } else if (data.risk_level === 'moderate') {
+          riskClass = 'risk-moderate';
+        } else if (data.risk_level === 'high') {
+          riskClass = 'risk-high';
+        }
+  
+        output.innerHTML = `
+          <div class="${riskClass}">
+            <h2>Risk Level: ${data.message}</h2>
+            <p>Max Temp: ${data.max_temp}°F</p>
+            <p>Max Wind: ${data.max_wind} mph</p>
+            <p>Max Humidity: ${data.max_humidity}%</p>
+          </div>
+        `;
+      } catch (err) {
+        output.innerHTML = "Error fetching risk data.";
+        console.error(err);
+      }
+    }
+  </script>
+  
+</body>
+</html>
+

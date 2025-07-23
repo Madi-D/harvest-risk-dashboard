@@ -1,6 +1,9 @@
 #just contains logic to call the weather API
 import requests
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 #---------------- Funciton -------------------
 # Purpose: 
@@ -22,17 +25,18 @@ def getWeather(zipcode):
 
     url = "https://api.openweathermap.org/data/2.5/forecast"
     parameters = {
-        'zip' : zipcode,
+        'zip' : f'{zipcode},us',
         'appid' : API_KEY,
         'units' : 'imperial'
     }
 
-    response = requests.get(url, parameters=parameters)
+    response = requests.get(url, params=parameters)
 
-    if response.status_code != 200:
-        print(f"ERROR: {response.status_code}")
-        print("Repsonse content: ", response.content)
-        return[]
+    if response.status_code == 200:
+        data = response.json()
+        #print("Current temperature:", data["main"]["temp"], "°F")
+    else:
+        raise Exception(f"Weather API Error {response.status_code}: {response.text}")
 
     data = response.json()
     simplified_forecast = []
@@ -47,4 +51,11 @@ def getWeather(zipcode):
             'rain' : entry.get('rain', {}).get('3h', 0),
         }
         simplified_forecast.append(forecast)
+    print("Simplified forecast: ", simplified_forecast)
     return simplified_forecast
+
+if __name__ == "__main__":
+            zip_code = "99324"
+            forecast = getWeather(zip_code)
+            for f in forecast:
+                print(f)
